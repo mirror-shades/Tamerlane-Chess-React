@@ -62,3 +62,15 @@
 .tile .chess-piece:active {
     cursor: grabbing;
 }
+
+.tile-highlight::before {
+    position: absolute;
+    margin-left: 25px;
+    margin-top: 25px;
+    content: " ";
+    width: 20px;
+    height: 20px;
+    opacity: 80%;
+    border-radius: 20px;
+    background-color: rgb(209, 211, 110);
+}

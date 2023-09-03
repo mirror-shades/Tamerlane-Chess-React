@@ -9,86 +9,199 @@ interface Move {
   endX: number
   endY: number
   piece: String
-  pieceTaken: String | null
+  pieceTaken: String | undefined
 }
 
 let boardState: Array<Array<String>> = []
+let moveLog:any = []
 let moveList:any = []
 
 const logic = new Logic()
 
 function Chessboard() {
   const[init, setInit] = useState(false)
-  const[turns, setTurns] = useState(0)
+  const[turn, setTurn] = useState(1)
+  const[update, setUpdate] = useState(0)
+  const[activePiece, setActivePiece] : any = useState(undefined)
+  const[endY, setEndY] : any = useState(undefined)
+  const[endX, setendX] : any = useState(undefined)
+  const[initialX, setInitialX] : any = useState(undefined)
+  const[initialY, setInitialY] : any = useState(undefined)
   const chessboardRef = useRef<HTMLDivElement>(null)
 
   let board:Array<any> = []
 
-  let activePiece: HTMLElement | null = null    
-  let initialX: number|null = null
-  let initialY: number|null = null
+  // function grabPiece(e: React.MouseEvent) {
+  //   const chessboard = chessboardRef.current
+  //   const element = e.target as HTMLElement;
+  //   let whiteToMove: boolean = turn % 2 == 1
+  //   //sets the initial coordinates which are used when changing boardState
+  //   if(element.classList.contains("chess-piece") && chessboard) {
+  //     const x = e.clientX - chessboard.offsetLeft
+  //     const y = e.clientY - chessboard.offsetTop
+  //     let _initialY: number|undefined = undefined
+  //     let _initialX: number|undefined = undefined
+  //     for(let i = 11; i >= 0; i--) {
+  //       if(i*75 <= x && (i+1)*75>=x){
+  //         _initialX = i
+  //       }
+  //     }
+  //     for(let i = 10; i >= 0; i--) {
+  //       if(i*75 <= y && (i+1)*75>=y){
+  //         _initialY = i
+  //       }
+  //     }
+  //     if(_initialX !== undefined && _initialY !== undefined){
+  //       if((whiteToMove && boardState[_initialY][_initialX][0] == "w")||(!whiteToMove &&boardState[_initialY][_initialX][0] == "b")){
+  //         initialX = _initialX
+  //         initialY = _initialY
+  //         let _moves: any = logic.getPossibleMoves(initialX,initialY,boardState[initialY][initialX],boardState,turn)
+  //         moveList = _moves
+  //         setUpdate(update+1)
+  //         activePiece = element;
+  //       }
+  //     }
+  //   }
+  // }
 
-  function grabPiece(e: React.MouseEvent) {
+  // function dragPiece(e: React.MouseEvent) {
+  //   const chessboard = chessboardRef.current
+  //   if(activePiece && chessboard){
+  //     const minX = chessboard.offsetLeft -15
+  //     const minY = chessboard.offsetTop -15
+  //     const maxX = chessboard.offsetLeft + chessboard.clientWidth -60
+  //     const maxY = chessboard.offsetTop + chessboard.clientHeight -60
+  //     const x = e.clientX-35
+  //     const y = e.clientY-35
+  //     activePiece.style.position = "absolute"
+
+  //     if(x<minX){
+  //       activePiece.style.left = `${minX}px`
+  //     }else if(x>maxX){
+  //       activePiece.style.left = `${maxX}px`
+  //     }else{
+  //       activePiece.style.left = `${x}px`
+  //     }      
+      
+  //     if(y<minY){
+  //       activePiece.style.top = `${minY}px`
+  //     }else if(y>maxY){
+  //       activePiece.style.top = `${maxY}px`
+  //     }else{
+  //       activePiece.style.top = `${y}px`
+  //     }
+      
+  //   }
+
+  // }
+
+  // function dropPiece(e: React.MouseEvent) {
+  //   const chessboard = chessboardRef.current
+  //   if(activePiece && chessboard) {
+  //     const x = e.clientX - chessboard.offsetLeft
+  //     const y = e.clientY - chessboard.offsetTop
+  //     let xPos = undefined
+  //     let yPos = undefined
+  //     let xRaw = undefined
+  //     let yRaw = undefined
+  //     for(let i = 0; i < 11; i++) {
+  //       if(i*75 <= x && (i+1)*75>=x){
+  //         xRaw = i
+  //         xPos = (i * 75)  + chessboard.offsetLeft
+  //       }
+  //     }
+  //     for(let i = 0; i < 10; i++) {
+  //       if(i*75 <= y && (i+1)*75>=y){
+  //         yRaw = i
+  //         yPos = (i * 75)  + chessboard.offsetTop
+  //       }
+  //     }
+      
+  //     if(yRaw != undefined && xRaw != undefined && yPos != undefined && xPos != undefined && initialX != undefined && initialY != undefined ){
+  //       if([xRaw,yRaw]){
+  //         activePiece.style.left = `${xPos}px`
+  //         activePiece.style.top = `${yPos}px`
+  //         let taken = undefined
+  //         if(boardState[yRaw][xRaw] != "---"){
+  //           taken = boardState[yRaw][xRaw]
+  //         }
+  //         let _piece = boardState[initialY][initialX]
+  //         boardState[initialY][initialX] = "---"
+  //         boardState[yRaw][xRaw] = _piece
+  //         let _move: Move = {
+  //           initialX: initialX,
+  //           initialY: initialY,
+  //           endX: xRaw,
+  //           endY: yRaw,
+  //           piece: _piece,
+  //           pieceTaken: taken
+  //         }
+  //         moveLog.push(_move)
+  //         setTurn(turn+1)
+  //       }
+  //     }
+  //     //moveList=[]
+  //     initialX = undefined
+  //     initialY = undefined
+  //     activePiece = undefined
+  //   }
+  // }
+
+  function click(e: React.MouseEvent) {
+    console.log(initialX,endX)
+
+   
+    if(initialX === undefined && initialY === undefined){
+      click1(e)
+    }
+    else if(endX === undefined && endY === undefined){
+      click2(e)
+    }
+  }
+
+  function click1(e: React.MouseEvent) {
+    console.log("click 1")
     const chessboard = chessboardRef.current
     const element = e.target as HTMLElement;
+    let whiteToMove: boolean = turn % 2 == 1
     //sets the initial coordinates which are used when changing boardState
     if(element.classList.contains("chess-piece") && chessboard) {
       const x = e.clientX - chessboard.offsetLeft
       const y = e.clientY - chessboard.offsetTop
+      let _initialY: number|undefined = undefined
+      let _initialX: number|undefined = undefined
       for(let i = 11; i >= 0; i--) {
         if(i*75 <= x && (i+1)*75>=x){
-          initialX = i
+          _initialX = i
         }
       }
       for(let i = 10; i >= 0; i--) {
         if(i*75 <= y && (i+1)*75>=y){
-          initialY = i
+          _initialY = i
         }
       }
-      activePiece = element;
-    }
-  }
-
-  function movePiece(e: React.MouseEvent) {
-    const chessboard = chessboardRef.current
-    if(activePiece && chessboard){
-      const minX = chessboard.offsetLeft -15
-      const minY = chessboard.offsetTop -15
-      const maxX = chessboard.offsetLeft + chessboard.clientWidth -60
-      const maxY = chessboard.offsetTop + chessboard.clientHeight -60
-      const x = e.clientX-35
-      const y = e.clientY-35
-      activePiece.style.position = "absolute"
-
-      if(x<minX){
-        activePiece.style.left = `${minX}px`
-      }else if(x>maxX){
-        activePiece.style.left = `${maxX}px`
-      }else{
-        activePiece.style.left = `${x}px`
-      }      
-      
-      if(y<minY){
-        activePiece.style.top = `${minY}px`
-      }else if(y>maxY){
-        activePiece.style.top = `${maxY}px`
-      }else{
-        activePiece.style.top = `${y}px`
+      if(_initialX !== undefined && _initialY !== undefined){
+        if((whiteToMove && boardState[_initialY][_initialX][0] == "w")||(!whiteToMove &&boardState[_initialY][_initialX][0] == "b")){
+          setInitialX(_initialX)
+          setInitialY(_initialY)
+          let _moves: any = logic.getPossibleMoves(_initialX,_initialY,boardState[_initialY][_initialX],boardState,turn)
+          moveList = _moves
+          setUpdate(update+1)
+          setActivePiece(element);
+        }
       }
-      
     }
-
   }
 
-  function dropPiece(e: React.MouseEvent) {
+  function click2(e: React.MouseEvent) {
     const chessboard = chessboardRef.current
     if(activePiece && chessboard) {
       const x = e.clientX - chessboard.offsetLeft
       const y = e.clientY - chessboard.offsetTop
-      let xPos = null
-      let yPos = null
-      let xRaw = null
-      let yRaw = null
+      let xPos = undefined
+      let yPos = undefined
+      let xRaw = undefined
+      let yRaw = undefined
       for(let i = 0; i < 11; i++) {
         if(i*75 <= x && (i+1)*75>=x){
           xRaw = i
@@ -103,18 +216,16 @@ function Chessboard() {
       }
       
       if(yRaw != undefined && xRaw != undefined && yPos != undefined && xPos != undefined && initialX != undefined && initialY != undefined ){
-        let isValid = logic.isMoveValid(xPos,yPos,xPos,yPos,"wpK")
-        if(isValid){
+        if(verifyMove([yRaw,xRaw])){
           activePiece.style.left = `${xPos}px`
           activePiece.style.top = `${yPos}px`
-          let taken = null
+          let taken = undefined
           if(boardState[yRaw][xRaw] != "---"){
             taken = boardState[yRaw][xRaw]
           }
           let _piece = boardState[initialY][initialX]
           boardState[initialY][initialX] = "---"
           boardState[yRaw][xRaw] = _piece
-          drawBoard()
           let _move: Move = {
             initialX: initialX,
             initialY: initialY,
@@ -123,27 +234,42 @@ function Chessboard() {
             piece: _piece,
             pieceTaken: taken
           }
-          moveList.push(_move)
-          setTurns(turns+1)
+          moveLog.push(_move)
+          setTurn(turn+1)
         }
       }
-      drawBoard()
-      initialX = null
-      initialY = null
-      activePiece = null
+      moveList=[]
+      setInitialX(undefined)
+      setInitialY(undefined)
+      setActivePiece(undefined)
     }
   }
 
-  function drawBoard() {
+  function verifyMove(move: Array<number>) {
+    for(let i = 0; i < moveList.length; i++){
+      if(moveList[i][0] === move[0] && moveList[i][1] === move[1]){
+        return(true)
+      }
+    }
+    return(false)
+  }
+
+  function drawBoard(moveList: Array<any>) {
     board = []
     for(let v = 0; v < 10; v++){
       for(let h = 0; h < 11; h++){
         let imagePath = undefined      
         let coordSum = v+h;
+        let highlight = false
         if(boardState[v][h] != "---"){
           imagePath = `assets/images/${boardState[v][h]}.png`
         }
-        board.push(<Tile key={`${v},${h}`} number={coordSum} image={imagePath}/>)
+        for(let move = 0; move < moveList.length; move++){
+          if(moveList[move][0] === v && moveList[move][1] === h) {
+            highlight=true
+          }
+        }
+        board.push(<Tile key={`${v},${h}`} number={coordSum} image={imagePath} highlight={highlight}/>)
       }
     }
   }
@@ -153,13 +279,15 @@ function Chessboard() {
     setInit(true)
   }
 
+  drawBoard(moveList)
 
-  drawBoard()
+  
+  
+/*onMouseUp={e => dropPiece(e)} */
+/*onMouseMove={e => movePiece(e)} */
   return (
           <div 
-          onMouseUp={e => dropPiece(e)} 
-          onMouseMove={e => movePiece(e)} 
-          onMouseDown={e => grabPiece(e)} 
+          onMouseDown={e => click(e)} 
           id="chessboard"
           ref={chessboardRef}>
             {board}
