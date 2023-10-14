@@ -1,5 +1,5 @@
 export default class Logic {
-    masculineArray = [
+    masculineArray1 = [
         ["bEl", "---", "bCa", "---", "bWe", "---", "bWe", "---", "bCa", "---", "bEl"],
         ["bRk", "bMo", "bTa", "bGi", 'bVi', "bKa", "bAd", "bGi", "bTa", "bMo", "bRk"],
         ["bpR", "bpM", "bpT", "bpG", "bpV", "bpK", "bpA", "bpE", "bpC", "bpW", "bp0"],
@@ -16,19 +16,52 @@ export default class Logic {
         ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],    
         ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
         ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
-        ["---", "bKa", "---", "bGi", "---", "---", "---", "---", "---", "wKa", "---"],
-        ["---", "---", "---", "---", "wGi", "---", "---", "---", "---", "---", "---"],
+        ["---", "bKa", "---", "---", "---", "---", "---", "---", "---", "wKa", "---"],
+        ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
+        ["---", "---", "---", "wAd", "---", "---", "---", "---", "---", "---", "---"],
+        ["---", "---", "---", "---", "---", "---", "---", "---", "bRk", "---", "---"],
         ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
         ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"],
-        ["---", "---", "---", "bpM", "---", "---", "---", "---", "---", "---", "---"],
-        ["---", "---", "wpK", "---", "---", "---", "---", "---", "---", "---", "---"],
         ["---", "---", "---", "---", "---", "---", "---", "---", "---", "---", "---"]
     ]
 
-   // masculineArray = this.testBoard
+    masculineArray = this.testBoard
 
-    getPossibleMoves(x: number, y: number, type: String, board:any, turn: number){
-        let moveList = []
+    getAllPossibleMoves(board:any, turn: number){
+        let player: string = turn % 2 === 1 ? "w" : "b"
+        let masterList = []
+        for(let i = 0; i < board.length; i++){
+            for(let j = 0; j < board[i].length; j++){
+                let arr:Array<any> | undefined=this.getPossibleMoves(i, j, board[i][j], board, turn)
+                if (board[i][j][0] === player && arr) {
+                    masterList.push(...arr);
+                }
+            }
+        }
+        return masterList
+    }
+
+    getValidMovesForPiece(x:number, y:number,board:any, turn: number, piece:string){
+        let player: string = turn % 2 === 1 ? "w" : "b";                  
+    
+        let pieceMoves: Array<any> | undefined = this.getPossibleMoves(x,y,piece,board,turn);
+        if (!pieceMoves){ return null }
+    
+        let validMoveList = pieceMoves.filter((move:any) => {
+            let testBoard = JSON.parse(JSON.stringify(board));  //Create a copy of the current board
+    
+            let pieceToMove = testBoard[y][x]; //Save piece from current position
+            console.log( move)
+            testBoard[move[0]][move[1]] = pieceToMove; //Move piece to the new position 
+            testBoard[y][x] = "---"; //Clear out the original location
+            console.log(this.isKingInCheck(testBoard, player, turn))
+            return !this.isKingInCheck(testBoard, player, turn); //If this move would result in the player's own king being in check, then it's an invalid move
+        });              
+    
+        return validMoveList;
+    }
+
+    getPossibleMoves(x: number, y: number, type: string, board:any, turn: number){
         if(type[1] === "p") {
             return this.getPawnMoves(x,y,board,turn) 
         }
@@ -470,7 +503,6 @@ export default class Logic {
             }
             if(y+i <= 9 && x+i <= 10){
                 if(board[y+i][x+i][0] === allyColor){
-                //     console.log("wow")
                 }
                 if(board[y+i][x+i][0] === enemyColor){
                     moveList.push([y+i,x+i])
@@ -521,7 +553,6 @@ export default class Logic {
         moveList.push(...this.calculateGiraffePaths(y-1,x+1,(0),(1),board, turn))
         moveList.push(...this.calculateGiraffePaths(y+1,x+1,(1),(0),board, turn))
         moveList.push(...this.calculateGiraffePaths(y+1,x+1,(0),(1),board, turn))
-        console.log(moveList)
         return moveList
     }
         
@@ -534,7 +565,7 @@ export default class Logic {
         let newr = startr
         for(let i = 1; i <= 10; i++){
             if(newc >= 0 && newc <= 9 && newr >= 0 && newr <= 10){
-                if(i < 2){
+                if(i < 3){
                     if(board[newc][newr][0] === allyColor || board[newc][newr][0] === enemyColor){
                         break
                     }
@@ -560,8 +591,49 @@ export default class Logic {
         }
         return moveList
     }
-      
 
+    isKingInCheck(board:any, side:string, turn:number) {
+        let kingLoc = this.findKing(board, side)
+        let _turn; // declare _turn, will initialize it later
+
+        // Determine the _turn based on the side of the king instead of the current turn
+        if (side === 'w') {
+            _turn = (turn % 2 === 0) ? turn : turn+1 ; // If white's king, make sure _turn is even
+        } else {
+            _turn = (turn % 2 === 1) ? turn : turn+1 ; // If black's king, make sure _turn is odd
+        }
+
+        if(kingLoc){
+            return this.isUnderAttack(kingLoc[0], kingLoc[1], board, _turn)
+        }
+    }
+
+    isUnderAttack(x: number, y: number, board:any, turn:number){
+        //if checking while white's turn, the target must be a black piece
+        //to target a white piece during white's turn, just increment the turn number by 1
+        let moveList = this.getAllPossibleMoves(board, turn)
+        for(let i = 0; i < moveList.length; i++) {
+            if(moveList[i][0] == y && moveList[i][1] == x) {
+                return true
+            }
+        }
+        return false
+    }
+      
+    findKing(board:any, side:string){
+        for(let i = 0; i < board.length; i++){
+            for(let j = 0; j < board[i].length; j++){
+                if(board[i][j][1] === "K"){
+                    if(board[i][j][0] === "w" && side === "w"){
+                        return([i,j])
+                    }
+                    if(board[i][j][0] === "b" && side === "b") {
+                        return([i,j])
+                    }
+                }
+            }
+        }
+    }
 
 /**
 def getKhanMoves(r,c,moves){

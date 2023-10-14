@@ -8,11 +8,11 @@ interface Move {
   initialY: number
   endX: number
   endY: number
-  piece: String
-  pieceTaken: String | undefined
+  piece: string
+  pieceTaken: string | undefined
 }
 
-let boardState: Array<Array<String>> = []
+let boardState: Array<Array<string>> = []
 let moveLog:any = []
 let moveList:any = []
 
@@ -147,20 +147,37 @@ function Chessboard() {
   //   }
   // }
 
-  function click(e: React.MouseEvent) {
-    console.log(initialX,endX)
+  function findSquare(e: React.MouseEvent) {
+    const chessboard: any = chessboardRef.current
+    const x = e.clientX - chessboard.offsetLeft
+    const y = e.clientY - chessboard.offsetTop
+    let xTrans: number = 0
+    let yTrans: number = 0
+    for(let i = 11; i >= 0; i--) {
+      if(i*75 <= x && (i+1)*75>=x){
+        xTrans = i
+      }
+    }
+    for(let i = 10; i >= 0; i--) {
+      if(i*75 <= y && (i+1)*75>=y){
+        yTrans = i
+      }
+    }
+    return([xTrans,yTrans])
+  }
 
-   
+
+  function click(e: React.MouseEvent) {   
     if(initialX === undefined && initialY === undefined){
       click1(e)
     }
     else if(endX === undefined && endY === undefined){
       click2(e)
     }
+    console.log(findSquare(e))
   }
 
   function click1(e: React.MouseEvent) {
-    console.log("click 1")
     const chessboard = chessboardRef.current
     const element = e.target as HTMLElement;
     let whiteToMove: boolean = turn % 2 == 1
@@ -168,8 +185,9 @@ function Chessboard() {
     if(element.classList.contains("chess-piece") && chessboard) {
       const x = e.clientX - chessboard.offsetLeft
       const y = e.clientY - chessboard.offsetTop
-      let _initialY: number|undefined = undefined
-      let _initialX: number|undefined = undefined
+      let init = findSquare(e)
+      let _initialY: number = init[1]
+      let _initialX: number = init[0]
       for(let i = 11; i >= 0; i--) {
         if(i*75 <= x && (i+1)*75>=x){
           _initialX = i
@@ -184,8 +202,9 @@ function Chessboard() {
         if((whiteToMove && boardState[_initialY][_initialX][0] == "w")||(!whiteToMove &&boardState[_initialY][_initialX][0] == "b")){
           setInitialX(_initialX)
           setInitialY(_initialY)
-          let _moves: any = logic.getPossibleMoves(_initialX,_initialY,boardState[_initialY][_initialX],boardState,turn)
+          let _moves: any = logic.getValidMovesForPiece(_initialX,_initialY,boardState,turn,boardState[_initialY][_initialX])
           moveList = _moves
+          console.log(logic.getValidMovesForPiece(_initialX,_initialY,boardState,turn,boardState[_initialY][_initialX]))
           setUpdate(update+1)
           setActivePiece(element);
         }
@@ -280,8 +299,6 @@ function Chessboard() {
   }
 
   drawBoard(moveList)
-
-  
   
 /*onMouseUp={e => dropPiece(e)} */
 /*onMouseMove={e => movePiece(e)} */
